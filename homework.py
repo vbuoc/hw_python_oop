@@ -22,7 +22,7 @@ class Record:
     def __init__(self, amount, comment, date=dt.datetime.now()):
         self.amount = amount
         self.comment = comment
-        # по умолчанию Дата, но может быть передана строка
+        # по умолчанию Дата, но может быть передана строка 
         if type(date) == str:
             self.date = dt.datetime.strptime(date, '%d.%m.%Y')
         else:
