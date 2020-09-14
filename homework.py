@@ -13,7 +13,7 @@ class Calculator:
         for i in range(len(self.records)):
             currently = dt.datetime.now().date()
             return sum(
-                self.records[i].amount for i in range(len(self.records)) if self.records[i].date.date() == currently)
+                self.records[i].amount for i in range(len(self.records)) if self.records[i].date == currently)
 
     def get_week_stats(self):
         for i in range(len(self.records)):
@@ -21,79 +21,89 @@ class Calculator:
             begin_date = end_date - dt.timedelta(7)
             return sum(
                 self.records[i].amount for i in range(len(self.records)) if
-                begin_date <= self.records[i].date.date() <= end_date)
+                begin_date <= self.records[i].date <= end_date)
 
 
 class Record:
-    def __init__(self, amount, comment, date=dt.datetime.now()):
+    def __init__(self, amount, comment, date=None):
         self.amount = amount
         self.comment = comment
-<<<<<<< HEAD
-        # по умолчанию Дата, но может быть передана строка
-=======
->>>>>>> Created all classes + Comment
-        if type(date) == str:
-            self.date = dt.datetime.strptime(date, '%d.%m.%Y')
-        else:
-            self.date = date
+        self.date = self.set_date(date)
+
+    def set_date(self, date):
+        if not date:
+            return dt.datetime.now().date()
+        return dt.datetime.strptime(date, '%d.%m.%Y').date()
 
 
 class CashCalculator(Calculator):
-    USD_RATE = 74.90
-    EURO_RATE = 88.80
+    USD_RATE = 64.01
+    EURO_RATE = 75.01
 
-    CURRENCIES = {
-        "rub": 1.00,
-        "usd": USD_RATE,
-        "eur": EURO_RATE
-    }
-
-    CURRENCIES_TRANSLATE = {
-        "rub": "руб",
-        "usd": "USD",
-        "eur": "Euro"
-    }
+    @property
+    def settings(self):
+        return {
+            'usd': {'rate': self.USD_RATE, 'name': 'USD'},
+            'eur': {'rate': self.EURO_RATE, 'name': 'Euro'},
+            'rub': {'rate': 1, 'name': 'руб'}
+        }
 
     def get_today_cash_remained(self, currency):
+
+        currencies = self.settings
+        current_rate = currencies[currency]['rate']
+        current_rate_name = currencies[currency]['name']
+
         today_stats = super().get_today_stats()
-        today_stock_currency = round((self.limit - today_stats) / self.CURRENCIES[currency], 2)
+        today_stock_currency = round((self.limit - today_stats) / current_rate, 2)
 
         if self.limit > today_stats:
-            ret_str = f'На сегодня осталось {today_stock_currency} {currency}'
+            ret_str = f'На сегодня осталось {today_stock_currency} {current_rate_name}'
         elif self.limit == today_stats:
             ret_str = "Денег нет, держись"
         else:
-            ret_str = f'Денег нет, держись: твой долг {today_stock_currency} {self.CURRENCIES_TRANSLATE[currency]}'
+            ret_str = f'Денег нет, держись: твой долг - {abs(today_stock_currency)} {current_rate_name}'
         return ret_str
 
     def get_week_cash_remained(self, currency):
+
+        currencies = self.settings
+        current_rate = currencies[currency]['rate']
+        current_rate_name = currencies[currency]['name']
+
         week_stats = super().get_week_stats()
-        week_stock_currency = round(week_stats / self.CURRENCIES[currency], 2)
-        return f'За 7 дней было потрачено {week_stock_currency} {self.CURRENCIES_TRANSLATE[currency]}'
+        week_stock_currency = round(week_stats / current_rate, 2)
+
+        return f'За 7 дней было потрачено {week_stock_currency} {current_rate_name}'
+
 
 class CaloriesCalculator(Calculator):
-
     def get_calories_remained(self):
-        # должен возвращать ответ «Сегодня можно съесть что-нибудь ещё, но с общей калорийностью не более N кКал»,
-        # если лимит limit не достигнут, или «Хватит есть!», если лимит достигнут или превышен.
-        pass
+        today_stats = super().get_today_stats()
+        today_stock_calories = self.limit - today_stats
+        if today_stats < self.limit:
+            return f'Сегодня можно съесть что-нибудь ещё, но с общей калорийностью не более {today_stock_calories} кКал'
+        else:
+            return 'Хватит есть!'
 
-    pass
+    def get_week_stats(self):
+        week_stats = super().get_week_stats()
+        return f'За последние 7 дней было съедено {week_stats} кКал.'
 
+########
+# cash_calculator = CashCalculator(1000)
+# cash_calculator.add_record(Record(amount=500, comment="кофе"))
+# cash_calculator.add_record(Record(amount=800, comment="Серёге за обед"))
+# cash_calculator.add_record(Record(amount=300, comment="бар в Танин др", date="08.11.2019"))
+# print(cash_calculator.get_today_cash_remained("rub"))
+# print(cash_calculator.get_today_cash_remained("usd"))
+# print(cash_calculator.get_week_cash_remained("rub"))
+# print(cash_calculator.get_week_cash_remained("eur"))
 
-# создадим калькулятор денег с дневным лимитом 1000
-#cash_calculator = CashCalculator(1000)
-# дата в параметрах не указана,
-# так что по умолчанию к записи должна автоматически добавиться сегодняшняя дата
-#cash_calculator.add_record(Record(amount=145, comment="кофе"))
-# и к этой записи тоже дата должна добавиться автоматически
-#cash_calculator.add_record(Record(amount=300, comment="Серёге за обед"))
-# а тут пользователь указал дату, сохраняем её
-#cash_calculator.add_record(Record(amount=3000, comment="бар в Танин др", date="08.11.2019"))
-#print(cash_calculator.get_today_cash_remained("rub"))
-#print(cash_calculator.get_today_cash_remained("usd"))
-# должно напечататься
-# На сегодня осталось 555 руб
-# сколько потрачено за неделю
-#print(cash_calculator.get_week_cash_remained("rub"))
-#print(cash_calculator.get_week_cash_remained("eur"))
+########
+# calories_calculator = CaloriesCalculator(1000)
+# calories_calculator.add_record(Record(amount=500, comment="кофе"))
+# calories_calculator.add_record(Record(amount=400, comment="кофе"))
+# calories_calculator.add_record(Record(amount=300, comment="бар в Танин др", date="08.11.2019"))
+# print(calories_calculator.get_calories_remained())
+# print(calories_calculator.get_week_stats())
