@@ -11,18 +11,20 @@ class Calculator:
 
     def get_today_stats(self):
         today = dt.datetime.now().date()
-        return sum(record.amount
-                   for record in self.records
-                   if record.date == today
-                   )
+        return sum(
+            record.amount
+            for record in self.records
+            if record.date == today
+        )
 
     def get_week_stats(self):
         end_date = dt.datetime.now().date()
         begin_date = end_date - dt.timedelta(7)
-        return sum(record.amount
-                   for record in self.records
-                   if begin_date <= record.date <= end_date
-                   )
+        return sum(
+            record.amount
+            for record in self.records
+            if begin_date <= record.date <= end_date
+        )
 
     def get_today_stock(self):
         return self.limit - self.get_today_stats()
