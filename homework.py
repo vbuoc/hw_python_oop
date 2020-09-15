@@ -11,15 +11,22 @@ class Calculator:
 
     def get_today_stats(self):
         today = dt.datetime.now().date()
-        return sum(self.records[i].amount for i in range(len(self.records)) if self.records[i].date == today)
+        return sum(record.amount
+                   for record in self.records
+                   if record.date == today
+                   )
 
     def get_week_stats(self):
         end_date = dt.datetime.now().date()
         begin_date = end_date - dt.timedelta(7)
-        return sum(self.records[i].amount for i in range(len(self.records)) if begin_date <= self.records[i].date <= end_date)
+        return sum(record.amount
+                   for record in self.records
+                   if begin_date <= record.date <= end_date
+                   )
 
     def get_today_stock(self):
         return self.limit - self.get_today_stats()
+
 
 class Record:
     def __init__(self, amount, comment, date=None):
@@ -36,7 +43,7 @@ class CashCalculator(Calculator):
     EURO_RATE = 75.01
 
     @property
-    def get_currencies(self):
+    def dict_rates(self):
         return {
             'usd': {'rate': self.USD_RATE, 'name': 'USD'},
             'eur': {'rate': self.EURO_RATE, 'name': 'Euro'},
@@ -44,27 +51,25 @@ class CashCalculator(Calculator):
         }
 
     def get_today_cash_remained(self, currency):
+        today_stock = self.get_today_stock()
+        if today_stock == 0:
+            return 'Денег нет, держись'
 
-        currencies = self.get_currencies
-        if currency not in currencies:
+        if currency not in self.dict_rates:
             return f'Не известная валюта {currency}'
 
-        current_rate = currencies[currency]['rate']
+        current_rate = self.dict_rates[currency]['rate']
         if current_rate == 0:
             return 'Курс валюты не может быть нулевым'
-        current_rate_name = currencies[currency]['name']
 
-        today_stock = self.get_today_stock()
         today_stock_currency = round(today_stock / current_rate, 2)
+        current_rate_name = self.dict_rates[currency]['name']
 
         if today_stock > 0:
-            ret_str = f'На сегодня осталось {today_stock_currency} {current_rate_name}'
-        elif today_stock == 0:
-            ret_str = 'Денег нет, держись'
-        else:
-            today_stock_currency = abs(today_stock_currency)
-            ret_str = f'Денег нет, держись: твой долг - {today_stock_currency} {current_rate_name}'
-        return ret_str
+            return f'На сегодня осталось {today_stock_currency} {current_rate_name}'
+
+        today_stock_currency = abs(today_stock_currency)
+        return f'Денег нет, держись: твой долг - {today_stock_currency} {current_rate_name}'
 
 
 class CaloriesCalculator(Calculator):
