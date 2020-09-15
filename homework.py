@@ -62,7 +62,8 @@ class CashCalculator(Calculator):
         elif today_stock == 0:
             ret_str = 'Денег нет, держись'
         else:
-            ret_str = f'Денег нет, держись: твой долг - {abs(today_stock_currency)} {current_rate_name}'
+            today_stock_currency = abs(today_stock_currency)
+            ret_str = f'Денег нет, держись: твой долг - {today_stock_currency} {current_rate_name}'
         return ret_str
 
 
